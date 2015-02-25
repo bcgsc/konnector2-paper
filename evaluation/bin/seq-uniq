@@ -1,0 +1,26 @@
+#!/bin/bash
+set -eu -o pipefail
+
+sort_opt=''
+while getopts :S: opt; do
+	case $opt in
+		S) sort_opt="$sort_opt -S $OPTARG";;
+		\?) echo >&2 "invalid option: -$OPTARG"; exit 1;;
+	esac
+done
+shift $((OPTIND-1))
+
+bioawk -c fastx '
+{
+	orig=$seq;
+	# note: revcomp changes $seq in place
+	revcomp($seq);
+	if (orig < $seq)
+		print orig;
+	else
+		print $seq;
+}
+' "$@" | \
+	sort $sort_opt | \
+	uniq | \
+	awk '{print ">"i++; print $0}'

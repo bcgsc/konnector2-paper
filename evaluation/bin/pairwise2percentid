@@ -1,0 +1,52 @@
+#!/bin/bash
+set -eu -o pipefail
+
+awk -v n_is_match=0 -v count_ambig=1 '
+function die(msg) {
+	print msg > "/dev/stderr"
+	exit 1
+}
+BEGIN {
+	if (count_ambig) {
+		code[M]="AC";
+		code[R]="AG";
+		code[W]="AT";
+		code[S]="CG";
+		code[Y]="CT";
+		code[K]="GT";
+		code[V]="ACG";
+		code[H]="ACT";
+		code[D]="AGT";
+		code[B]="CGT";
+	}
+	if (n_is_match)
+		code[N]="ACGT";
+}
+{
+	qname=$1;
+	getline;
+	seq1=$1;
+	getline;
+	getline;
+	seq2=$1;
+
+	if (length(seq1) != length(seq2))
+		die("error: seq pairs must be the same length!");
+
+	l=length(seq1);
+
+	matches=0;
+	for (i=1; i<=l; ++i) {
+		char1=toupper(substr(seq1,i,1));
+		char2=toupper(substr(seq2,i,1));
+		if (char1==char2)
+			matches++;
+		else if (char1 in code && index(char2,code[char1]))
+			matches++;
+		else if (char2 in code && index(char1,code[char2]))
+			matches++;
+	}
+
+	printf("%s\t%.2f\n", qname, 100*matches/l);
+}
+' "$@"
