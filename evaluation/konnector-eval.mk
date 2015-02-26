@@ -20,8 +20,8 @@ konnector_opt?=
 # meta rules
 #------------------------------------------------------------
 
-.PHONY: check-params check-bloom-params build-bloom
-default: check-params $(name)_merged.percent-id.tab
+.PHONY: check-params check-bloom-params build-bloom eval
+default: check-params eval
 
 check-params: check-bloom-params
 ifndef ref
@@ -75,17 +75,6 @@ endif
 # analyze konnector output
 #------------------------------------------------------------
 
-# pseudoread length histogram
-$(name)_merged.fa.length.hist: $(name)_merged.fa.gz
-	bioawk -c fastx '{print length($$seq)}' | hist > $@.partial
-	mv $@.partial $@
-
-# pseudoread-to-ref alignments
-$(name)_merged.sam.gz: $(name)_merged.fa.gz
-	bwa-mem.mk query=$^ target=$(ref) name=$(name)_merged \
-		$(name)_merged.sam.gz
-
-# pseudoread percent seq identity histogram
-$(name)_merged.percent-id.tab: $(name)_merged.sam.gz
-	zcat $^ | sam2pairwise | pairwise2percentid > $@.partial
-	mv $@.partial $@
+eval: $(name)_merged.fa.gz $(ref)
+	eval-reads.mk name=$(name)_merged reads=$(name)_merged.fa.gz \
+		ref=$(ref) bwa_opt=$(bwa_opt)
