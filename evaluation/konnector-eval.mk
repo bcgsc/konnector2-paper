@@ -9,6 +9,12 @@ SHELL=/bin/bash -o pipefail
 konnector=konnector
 # path to abyss-bloom binary
 abyss_bloom=abyss-bloom
+# user-specified abyss-bloom options
+bloom_opt?=
+# reads to load into Bloom filter
+bloom_reads?=$(pe_reads)
+# Bloom filter path
+bloom?=$(name).bloom.gz
 # num threads
 j?=1
 # required konnector options
@@ -52,24 +58,25 @@ build-bloom: check-bloom-params $(name).k$k.bloom.gz
 # build bloom filter
 #------------------------------------------------------------
 
-ifndef bloom
-$(name).k$k.bloom.gz: $(pe_reads)
-	$(abyss_bloom) build -vvv -k$k -j$j -l2 - $^ | \
+# Bloom filter output dir
+$(dir $(bloom)):
+	mkdir -p $@
+
+$(bloom): $(bloom_reads) | $(dir $(bloom))
+	$(abyss_bloom) build -vvv -k$k -j$j -l2 $(bloom_opt) - $^ | \
 		gzip > $@.partial
 	mv $@.partial $@
-endif
 
 #------------------------------------------------------------
 # run konnector
 #------------------------------------------------------------
 
-ifndef bloom
-$(name)_merged.fa: $(name).k$k.bloom.gz $(pe_reads)
+# konnector output dir
+$(dir $(name)):
+	mkdir -p $@
+
+$(name)_merged.fa: $(bloom) $(pe_reads) | $(dir $(name))
 	$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) $(konnector_opt) $(pe_reads)
-else
-$(name)_merged.fa: $(bloom) $(pe_reads)
-	$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) $(konnector_opt) $(pe_reads)
-endif
 
 #------------------------------------------------------------
 # analyze konnector output
