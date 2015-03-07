@@ -27,7 +27,7 @@ ifndef name
 endif
 
 length-hist: check-params $(name).length.hist
-align: check-params $(name).sam.gz
+align: check-params $(name).sam.gz $(name).unmapped.sam.gz
 percent-id: check-params $(name).percent-id.tab.gz
 
 #------------------------------------------------------------
@@ -42,8 +42,13 @@ $(name).length.hist: $(reads)
 # read-to-ref alignments
 $(name).sam.gz: $(reads)
 	bwa-mem.mk bwa_opt=$(bwa_opt) query=$^ target=$(ref) \
-		name=$(name).partial $(name).partial.sam.gz
+		name=$(name).partial j=$j $(name).partial.sam.gz
 	mv $(name).partial.sam.gz $@
+
+# num unmapped reads
+$(name).unmapped.sam.gz: $(name).sam.gz
+	zcat $^ | awk 'and($$2,4)' | \
+		gzip > $@
 
 # percent seq identity for each read
 $(name).percent-id.tab.gz: $(name).sam.gz
