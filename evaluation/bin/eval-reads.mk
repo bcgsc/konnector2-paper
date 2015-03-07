@@ -12,8 +12,9 @@ j?=1
 # meta rules
 #------------------------------------------------------------
 
-.PHONY: check-params length-hist align percent-id
-default: check-params length-hist align percent-id
+.PHONY: check-params length-hist length-hist-plot align \
+	percent-id percent-id-plot
+default: check-params length-hist-plot align percent-id-plot
 
 check-params:
 ifndef reads
@@ -27,8 +28,10 @@ ifndef name
 endif
 
 length-hist: check-params $(name).length.hist
+length-hist-plot: check-params $(name).length.hist.pdf
 align: check-params $(name).sam.gz $(name).unmapped.sam.gz
 percent-id: check-params $(name).percent-id.tab.gz
+percent-id-plot: check-params $(name).percent-id.hist.pdf
 
 #------------------------------------------------------------
 # analysis rules
@@ -56,4 +59,16 @@ $(name).percent-id.tab.gz: $(name).sam.gz
 		awk '!and($$2,4)' | \
 		sam2pairwise | pairwise2percentid | \
 		gzip > $@.partial
+	mv $@.partial $@
+
+#------------------------------------------------------------
+# plotting rules
+#------------------------------------------------------------
+
+$(name).length.hist.pdf: $(name).length.hist
+	expand-hist $^ | length-hist.r > $@.partial
+	mv $@.partial $@
+
+$(name).percent-id.hist.pdf: $(name).percent-id.tab.gz
+	zcat $^ | cut -f2 | percent-identity.r > $@.partial
 	mv $@.partial $@
