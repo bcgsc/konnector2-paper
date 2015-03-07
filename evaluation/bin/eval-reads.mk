@@ -17,7 +17,7 @@ default: check-params length-hist align percent-id
 
 check-params:
 ifndef reads
-	$(error missing parameter 'pe_reads' (paired-end reads))
+	$(error missing parameter 'reads' (paired-end reads))
 endif
 ifndef ref
 	$(error missing parameter 'ref' (reference genome FASTA))
