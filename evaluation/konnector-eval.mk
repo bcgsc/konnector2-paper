@@ -18,7 +18,7 @@ bloom?=$(name).bloom.gz
 # num threads
 j?=1
 # required konnector options
-KONNECTOR_OPT=-k$k -j$j -o $(name) -vvv
+KONNECTOR_OPT=-k$k -j$j -o $(name).partial -vvv
 # user-specified konnector options
 konnector_opt?=
 
@@ -48,13 +48,6 @@ endif
 build-bloom: check-bloom-params $(name).k$k.bloom.gz
 
 #------------------------------------------------------------
-# utility rules
-#------------------------------------------------------------
-
-%.gz: %
-	gzip $^
-
-#------------------------------------------------------------
 # build bloom filter
 #------------------------------------------------------------
 
@@ -75,8 +68,10 @@ $(bloom): $(bloom_reads) | $(dir $(bloom))
 $(dir $(name)):
 	mkdir -p $@
 
-$(name)_merged.fa: $(bloom) $(pe_reads) | $(dir $(name))
+$(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
 	$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) $(konnector_opt) $(pe_reads)
+	gzip $(name).partial_*
+	rename $(name).partial $(name) $(name).partial_*
 
 #------------------------------------------------------------
 # analyze konnector output
