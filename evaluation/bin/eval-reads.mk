@@ -52,7 +52,8 @@ $(name).unmapped.sam.gz: $(name).sam.gz
 
 # percent seq identity for each read
 $(name).percent-id.tab.gz: $(name).sam.gz
-	zcat $^ | samtools calmd -S - $(ref) | \
+	zcat $^ | \
+		awk '!and($$2,4)' | \
 		sam2pairwise | pairwise2percentid | \
 		gzip > $@.partial
 	mv $@.partial $@
