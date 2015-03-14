@@ -79,4 +79,4 @@ $(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
 
 eval: $(name)_merged.fa.gz $(ref)
 	eval-reads.mk name=$(name)_merged reads=$(name)_merged.fa.gz \
-		ref=$(ref) bwa_opt=$(bwa_opt)
+		ref=$(ref) j=$j bwa_opt=$(bwa_opt)
