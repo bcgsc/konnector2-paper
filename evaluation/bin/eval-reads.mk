@@ -29,7 +29,8 @@ endif
 
 length-hist: check-params $(name).length.hist
 length-hist-plot: check-params $(name).length.hist.pdf
-align: check-params $(name).sam.gz $(name).unmapped.sam.gz
+align: check-params $(name).sam.gz $(name).sorted.bam \
+	$(name).unmapped.sam.gz
 percent-id: check-params $(name).percent-id.tab.gz
 percent-id-plot: check-params $(name).percent-id.hist.pdf
 
@@ -43,10 +44,10 @@ $(name).length.hist: $(reads)
 	mv $@.partial $@
 
 # read-to-ref alignments
-$(name).sam.gz: $(reads)
+$(name).sam.gz $(name).sorted.bam: $(reads)
 	bwa-mem.mk bwa_opt=$(bwa_opt) query=$^ target=$(ref) \
-		name=$(name).partial j=$j $(name).partial.sam.gz
-	mv $(name).partial.sam.gz $@
+		name=$(name).partial j=$j
+	rename $(name).partial $(name) $(name).partial.*{sam,bam}*
 
 # num unmapped reads
 $(name).unmapped.sam.gz: $(name).sam.gz
