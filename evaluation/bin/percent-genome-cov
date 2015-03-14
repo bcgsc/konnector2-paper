@@ -1,0 +1,12 @@
+#!/bin/bash
+set -eu -o pipefail
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $(basename $0) <sorted_bam>" >&2
+	exit 1
+fi
+
+bedtools genomecov -ibam "$1" | \
+	awk '$1=="genome" {print $2,$3}' | \
+	hist2cdf | \
+	awk 'NR==1 {printf("%.2f\n", 100-$2)}'

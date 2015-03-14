@@ -13,8 +13,9 @@ j?=1
 #------------------------------------------------------------
 
 .PHONY: check-params length-hist length-hist-plot align \
-	percent-id percent-id-plot
-default: check-params length-hist-plot align percent-id-plot
+	percent-id percent-id-plot genome-cov
+default: check-params length-hist-plot align percent-id-plot \
+	genome-cov
 
 check-params:
 ifndef reads
@@ -33,6 +34,7 @@ align: check-params $(name).sam.gz $(name).sorted.bam \
 	$(name).unmapped.sam.gz
 percent-id: check-params $(name).percent-id.tab.gz
 percent-id-plot: check-params $(name).percent-id.hist.pdf
+genome-cov: $(name).genome-cov.txt
 
 #------------------------------------------------------------
 # analysis rules
@@ -61,6 +63,10 @@ $(name).percent-id.tab.gz: $(name).sam.gz
 		sam2pairwise | pairwise2percentid | \
 		gzip > $@.partial
 	mv $@.partial $@
+
+# percentage of genome covered by reads
+$(name).genome-cov.txt: $(name).sorted.bam
+	percent-genome-cov $^ > $@
 
 #------------------------------------------------------------
 # plotting rules
