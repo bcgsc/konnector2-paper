@@ -18,7 +18,7 @@ bloom?=$(name).bloom.gz
 # num threads
 j?=1
 # required konnector options
-KONNECTOR_OPT=-k$k -j$j -o $(name).partial -vvv
+KONNECTOR_OPT=-k$k -j$j -vvv
 # user-specified konnector options
 konnector_opt?=
 
@@ -69,7 +69,9 @@ $(dir $(name)):
 	mkdir -p $@
 
 $(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
-	$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) $(konnector_opt) $(pe_reads)
+	/usr/bin/time -p -o $(name).time \
+		$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) -o $(name).partial \
+		-t >(gzip >$(name).trace.gz) $(konnector_opt) $(pe_reads)
 	gzip $(name).partial_*
 	rename $(name).partial $(name) $(name).partial_*
 
