@@ -45,7 +45,7 @@ ifndef name
 	$(error missing parameter 'name' (output file prefix))
 endif
 
-build-bloom: check-bloom-params $(name).k$k.bloom.gz
+build-bloom: check-bloom-params $(bloom)
 
 #------------------------------------------------------------
 # build bloom filter
