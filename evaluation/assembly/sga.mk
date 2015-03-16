@@ -45,12 +45,12 @@ $(name)-1.bwt: $(name)-1.fa
 	$(sga) index $(verbose) -t $j $^
 
 # remove duplicate reads and contained reads
-$(name)-2.fa $(name)-2.bwt: $(name)-1.fa $(name)-1.bwt
+$(name)-2.fa: $(name)-1.fa $(name)-1.bwt
 	$(sga) filter $(verbose) -t $j \
 		--no-kmer-check -o $@ $<
 
 # merge unambiguous overlaps
-$(name)-3.fa: $(name)-2.fa $(name)-2.bwt
+$(name)-3.fa: $(name)-2.fa
 	$(sga) fm-merge $(verbose) \
 		-m $(min_merge_overlap) -t $j -o $@ $<
 
