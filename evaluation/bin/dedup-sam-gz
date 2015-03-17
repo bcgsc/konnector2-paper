@@ -1,0 +1,52 @@
+#!/bin/bash
+set -eu -o pipefail
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $(basename $0) <read_sorted_sam_gz>" >&2
+	exit 1
+fi
+
+aligns() {
+	zcat $1 | awk '!/^@/ && !and($2,4)'
+}
+
+paste \
+	<(aligns $1 | sam2pairwise | pairwise2percentid) \
+	<(aligns $1 | sam2coord --rlen | cut -f1-10) \
+	<(aligns $1) | \
+awk -v min_percent_id=98 '
+BEGIN {
+	current_qname="";
+	qseq_redundant=1;
+	qseq_set=0;
+}
+{
+	percent_id=$2;
+	qname=$3;
+	qalen=$6;
+	qlen=$7;
+	rname=$8;
+	qseq=$22;
+	if (qname != current_qname) {
+		if (!qseq_redundant) {
+			print ">"current_qname;
+			print current_qseq;
+		}
+		current_qname=qname;
+		current_qseq="<uninitialized>";
+		qseq_redundant=0;
+	}
+	if (qseq != "*") {
+		current_qseq=qseq;
+	}
+	if (qname != rname && qalen == qlen && percent_id >= min_percent_id) {
+		if (qlen < rlen || qname > rname)
+			qseq_redundant=1;
+	}
+}
+END {
+	if (!qseq_redundant) {
+		print ">"current_qname;
+		print current_qseq;
+	}
+}'
