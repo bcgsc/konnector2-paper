@@ -26,15 +26,10 @@ konnector_opt?=
 # meta rules
 #------------------------------------------------------------
 
-.PHONY: check-params check-bloom-params build-bloom eval
-default: check-params eval
+.PHONY: check-params check-bloom-params build-bloom
+default: check-params $(name)_merged.fa.gz
 
-check-params: check-bloom-params
-ifndef ref
-	$(error missing parameter 'ref' (reference genome FASTA))
-endif
-
-check-bloom-params:
+check-params:
 ifndef pe_reads
 	$(error missing parameter 'pe_reads' (paired-end reads))
 endif
@@ -45,7 +40,7 @@ ifndef name
 	$(error missing parameter 'name' (output file prefix))
 endif
 
-build-bloom: check-bloom-params $(bloom)
+build-bloom: check-params $(bloom)
 
 #------------------------------------------------------------
 # build bloom filter
@@ -68,17 +63,10 @@ $(bloom): $(bloom_reads) | $(dir $(bloom))
 $(dir $(name)):
 	mkdir -p $@
 
+# run konnector
 $(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
 	/usr/bin/time -p -o $(name).time \
 		$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) -o $(name).partial \
 		-t >(gzip >$(name).trace.gz) $(konnector_opt) $(pe_reads)
 	gzip $(name).partial_*
 	rename $(name).partial $(name) $(name).partial_*
-
-#------------------------------------------------------------
-# analyze konnector output
-#------------------------------------------------------------
-
-eval: $(name)_merged.fa.gz $(ref)
-	eval-reads.mk name=$(name)_merged reads=$(name)_merged.fa.gz \
-		ref=$(ref) j=$j bwa_opt=$(bwa_opt)
