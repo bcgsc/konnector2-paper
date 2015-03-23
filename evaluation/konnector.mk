@@ -51,7 +51,8 @@ $(dir $(bloom)):
 	mkdir -p $@
 
 $(bloom): $(bloom_reads) | $(dir $(bloom))
-	$(abyss_bloom) build -vvv -k$k -j$j -l2 $(bloom_opt) - $^ | \
+	/usr/bin/time -p -o $(bloom).time \
+		$(abyss_bloom) build -vvv -k$k -j$j -l2 $(bloom_opt) - $^ | \
 		gzip > $@.partial
 	mv $@.partial $@
 
