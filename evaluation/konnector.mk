@@ -70,4 +70,4 @@ $(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
 		$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) -o $(name).partial \
 		$(konnector_opt) $(pe_reads)
 	gzip $(name).partial_*
-	rename 's|$(name).partial|$(name)|' $(name).partial_*
+	for file in $(name).partial*; do mv $$file $${file/.partial/}; done
