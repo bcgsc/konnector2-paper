@@ -68,6 +68,6 @@ $(dir $(name)):
 $(name)_merged.fa.gz: $(bloom) $(pe_reads) | $(dir $(name))
 	/usr/bin/time -p -o $(name).time \
 		$(konnector) $(KONNECTOR_OPT) -i <(zcat $<) -o $(name).partial \
-		-t >(gzip >$(name).trace.gz) $(konnector_opt) $(pe_reads)
+		$(konnector_opt) $(pe_reads)
 	gzip $(name).partial_*
 	rename 's|$(name).partial|$(name)|' $(name).partial_*
