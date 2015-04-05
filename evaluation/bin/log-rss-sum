@@ -1,5 +1,5 @@
 #!/bin/bash
-echo 'total_rss'
+echo 'rss_sum'
 while true; do
 	ps -U $(whoami) -o rss= | \
 		awk '{sum+=$0} END {print sum" kb"}'
