@@ -3,5 +3,5 @@ echo 'total_rss'
 while true; do
 	ps -U $(whoami) -o rss= | \
 		awk '{sum+=$0} END {print sum" kb"}'
-	sleep 30
+	sleep 10
 done
