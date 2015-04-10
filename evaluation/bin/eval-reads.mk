@@ -37,24 +37,39 @@ percent-id-plot: check-params $(name).percent-id.hist.pdf
 genome-cov: $(name).genome-cov.txt
 
 #------------------------------------------------------------
-# analysis rules
+# alignment rules
 #------------------------------------------------------------
-
-# read length histogram
-$(name).length.hist: $(reads)
-	bioawk -c fastx '{print length($$seq)}' $^ | hist > $@.partial
-	mv $@.partial $@
 
 # read-to-ref alignments
 $(name).sam.gz $(name).sorted.bam: $(reads)
 	bwa-mem.mk bwa_opt=$(bwa_opt) query=$^ target=$(ref) \
 		name=$(name).partial j=$j
-	rename $(name).partial $(name) $(name).partial.*{sam,bam}*
+	for file in $(name).partial.*{sam,bam}*; do \
+		mv $$file $${file/.partial/}; \
+	done
 
-# num unmapped reads
+# save unmapped reads in separate file
 $(name).unmapped.sam.gz: $(name).sam.gz
 	zcat $^ | awk 'and($$2,4)' | \
 		gzip > $@
+
+# read-to-ref alignments (with multimapping)
+$(name)-multimapped.sorted.bam: $(reads)
+	bwa-mem.mk bwa_opt='-a $(bwa_opt)' query=$^ target=$(ref) \
+		name=$(name)-multimapped.partial j=$j
+	for file in $(name)-multimapped.partial.*{sam,bam}*; do \
+		mv $$file $${file/.partial/}; \
+	done
+
+#------------------------------------------------------------
+# analysis rules
+#------------------------------------------------------------
+
+# read length histogram
+$(name).length.hist: $(reads)
+	bioawk -c fastx '{print length($$seq)}' $^ | \
+		hist > $@.partial
+	mv $@.partial $@
 
 # percent seq identity for each read
 $(name).percent-id.tab.gz: $(name).sam.gz
@@ -64,9 +79,10 @@ $(name).percent-id.tab.gz: $(name).sam.gz
 		gzip > $@.partial
 	mv $@.partial $@
 
-# percentage of genome covered by reads
-$(name).genome-cov.txt: $(name).sorted.bam
-	percent-genome-cov $^ > $@
+# percentage genome coverage
+$(name).genome-cov.txt: $(name)-multimapped.sorted.bam
+	percent-genome-cov $^ > $@.partial
+	mv $@.partial $@
 
 #------------------------------------------------------------
 # plotting rules
