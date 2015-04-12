@@ -13,9 +13,10 @@ j?=1
 #------------------------------------------------------------
 
 .PHONY: check-params length-hist length-hist-plot align \
-	percent-id percent-id-plot genome-cov
-default: check-params length-hist-plot align percent-id-plot \
+	percent-id percent-id-plot percent-id-hist percent-id-cdf \
 	genome-cov
+default: check-params length-hist-plot align percent-id-plot \
+	percent-id-hist percent-id-cdf genome-cov
 
 check-params:
 ifndef reads
@@ -33,6 +34,8 @@ length-hist-plot: check-params $(name).length.hist.pdf
 align: check-params $(name).sam.gz $(name).sorted.bam \
 	$(name).unmapped.sam.gz
 percent-id: check-params $(name).percent-id.tab.gz
+percent-id-hist: check-params $(name).percent-id.hist
+percent-id-cdf: check-params $(name).percent-id.cdf
 percent-id-plot: check-params $(name).percent-id.hist.pdf
 genome-cov: $(name).genome-cov.txt
 
@@ -94,4 +97,24 @@ $(name).length.hist.pdf: $(name).length.hist
 
 $(name).percent-id.hist.pdf: $(name).percent-id.tab.gz
 	zcat $^ | cut -f2 | percent-identity.r > $@.partial
+	mv $@.partial $@
+
+$(name).percent-id.hist: $(name).percent-id.tab.gz \
+	$(name).sam.gz
+	paste \
+		<(zcat $(name).percent-id.tab.gz | cut -f2) \
+		<(zcat $(name).sam.gz | awk '!/^@/ && !and($$2,4)' | \
+			sam2coord | cut -f5) | \
+		percentid2hist > $@.partial
+	mv $@.partial $@
+
+$(name).bases-mapped.txt: $(name).percent-id.hist
+	cut -f3 $< | sum > $@.partial
+	mv $@.partial $@
+
+$(name).percent-id.cdf: $(name).percent-id.hist $(name).bases-mapped.txt
+	awk 'NR>1' $< | tac | cut -f2,3 | hist2cdf | \
+		awk -v total=`cat $(name).bases-mapped.txt` \
+			'{printf("%.2f\t%.6f\n",$$1,$$2/total)}' \
+		> $@.partial
 	mv $@.partial $@

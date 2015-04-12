@@ -1,0 +1,30 @@
+#!/bin/bash
+awk '
+BEGIN {
+	min=0;
+	max=100;
+	bin_width=0.01;
+	num_bins=int(max/bin_width);
+	printf("%s\t%s\t%s\n","min","max","bases")
+}
+{
+	if (NF != 2) {
+		print "error: expected input is TSV: <percent_id> <seq_len>" > "/dev/stderr";
+		error=1; exit 1;
+	}
+	percent_id=$1;
+	seq_len=$2;
+	i=int(percent_id/bin_width);
+	if (i > num_bins - 1)
+		i = num_bins - 1;
+	bin[i] += seq_len;
+	total_seq_len += seq_len;
+}
+END {
+	if (!error) {
+		for (i = 0;i<num_bins;i++) {
+			printf("%.2f\t%.2f\t%d\n", i*bin_width,
+				(i+1)*bin_width, bin[i]); 
+		}
+	}
+}'
