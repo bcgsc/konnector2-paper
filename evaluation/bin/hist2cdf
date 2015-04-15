@@ -1,2 +1,6 @@
 #!/bin/sh
-awk '{sum+=$2; print $1"\t"sum;}' "$@"
+gawk '
+BEGIN { PROCINFO["sorted_in"] = "@ind_num_asc" }
+{ h[$1] = $2; total += $2 }
+END { for (k in h) { sum += h[k]; printf("%d\t%.2f\n", k, sum*100/total) } }' \
+"$@"
