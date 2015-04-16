@@ -48,7 +48,8 @@ percent-id-plot: check-params $(name).percent-id.hist.pdf
 genome-cov: $(name).genome-cov.txt
 merged-percent-id-hist: check-merge-params $(name).percent-id.merged.hist
 merged-percent-id-cdf: check-merge-params $(name).percent-id.merged.cdf
-merge: check-merge-params merged-percent-id-hist merged-percent-id-cdf
+merged-genome-cov: check-merge-params $(name).genome-cov.merged.txt
+merge: check-merge-params merged-percent-id-hist merged-percent-id-cdf merged-genome-cov
 
 #------------------------------------------------------------
 # alignment rules
@@ -147,4 +148,12 @@ $(name).percent-id.merged.cdf: $(name).percent-id.merged.hist $(name).bases-mapp
 		awk -v total=`cat $(name).bases-mapped.total.txt` \
 			'{sum+=$$2; printf("%.2f\t%.6f\n",$$1,sum/total)}' \
 		> $@.partial
+	mv $@.partial $@
+
+$(name)-multimapped.sorted.merged.bam: $(foreach prefix,$(part_names),$(prefix)-multimapped.sorted.bam)
+	samtools merge $@.partial $^
+	mv $@.partial $@
+
+$(name).genome-cov.merged.txt: $(name)-multimapped.sorted.merged.bam
+	percent-genome-cov $^ > $@.partial
 	mv $@.partial $@
