@@ -1,1 +1,1 @@
-Writing and evaluation work for the Konnector 2 paper.
+Evaluation work for the Konnector 2 paper.
