@@ -8,19 +8,19 @@ function die(msg) {
 }
 BEGIN {
 	if (count_ambig) {
-		code[M]="AC";
-		code[R]="AG";
-		code[W]="AT";
-		code[S]="CG";
-		code[Y]="CT";
-		code[K]="GT";
-		code[V]="ACG";
-		code[H]="ACT";
-		code[D]="AGT";
-		code[B]="CGT";
+		code["M"]="AC";
+		code["R"]="AG";
+		code["W"]="AT";
+		code["S"]="CG";
+		code["Y"]="CT";
+		code["K"]="GT";
+		code["V"]="ACG";
+		code["H"]="ACT";
+		code["D"]="AGT";
+		code["B"]="CGT";
 	}
 	if (n_is_match)
-		code[N]="ACGT";
+		code["N"]="ACGT";
 }
 {
 	qname=$1;
@@ -41,9 +41,9 @@ BEGIN {
 		char2=toupper(substr(seq2,i,1));
 		if (char1==char2)
 			matches++;
-		else if (char1 in code && index(char2,code[char1]))
+		else if (char1 in code && index(code[char1],char2))
 			matches++;
-		else if (char2 in code && index(char1,code[char2]))
+		else if (char2 in code && index(code[char2],char1))
 			matches++;
 	}
 
